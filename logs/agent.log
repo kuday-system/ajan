@@ -1,0 +1,204 @@
+2026-04-20 01:34:08 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-20 01:34:08 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-20 01:38:27 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-20 01:38:27 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-20 01:43:04 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-20 01:43:04 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-20 01:44:47 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 02:07:06 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-20 02:07:06 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-20 02:39:45 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-20 02:39:45 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-20 02:40:41 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 02:43:46 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 02:46:20 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 02:48:24 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 02:50:32 | planner  | INFO    | Plan oluşturuldu | risk=high | steps=1 | forbidden=True
+2026-04-20 02:52:20 | planner  | ERROR   | AgentPlan validation hatası | 1 validation error for AgentPlan
+steps.0.reason
+  String should have at least 1 character [type=string_too_short, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_too_short
+2026-04-20 02:52:20 | app      | ERROR   | PlannerError | Plan şema doğrulaması başarısız: 1 validation error for AgentPlan steps.0.reason… [184 char daha]
+2026-04-20 02:54:26 | planner  | ERROR   | AgentPlan validation hatası | 2 validation errors for AgentPlan
+summary
+  String should have at least 1 character [type=string_too_short, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_too_short
+steps.0.reason
+  String should have at least 1 character [type=string_too_short, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_too_short
+2026-04-20 02:54:26 | app      | ERROR   | PlannerError | Plan şema doğrulaması başarısız: 2 validation errors for AgentPlan summary   Str… [377 char daha]
+2026-04-20 02:56:09 | planner  | ERROR   | AgentPlan validation hatası | 1 validation error for AgentPlan
+steps.0.reason
+  String should have at least 1 character [type=string_too_short, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_too_short
+2026-04-20 02:56:09 | app      | ERROR   | PlannerError | Plan şema doğrulaması başarısız: 1 validation error for AgentPlan steps.0.reason… [184 char daha]
+2026-04-20 02:59:50 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-20 03:52:57 | planner  | ERROR   | AgentPlan validation hatası | 1 validation error for AgentPlan
+steps.0.reason
+  Field required [type=missing, input_value={'step_no': 1, 'action': ...Documents\x08elgelerim'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+2026-04-20 03:52:57 | app      | ERROR   | PlannerError | Plan şema doğrulaması başarısız: 1 validation error for AgentPlan steps.0.reason… [192 char daha]
+2026-04-20 03:59:02 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-20 04:45:24 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-20 05:59:59 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 06:01:43 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-20 06:56:00 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-20 06:56:00 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-20 06:58:10 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 07:03:56 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 07:06:31 | planner  | INFO    | Plan oluşturuldu | risk=high | steps=1 | forbidden=False
+2026-04-20 07:08:32 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 07:44:11 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-20 07:44:11 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-20 07:45:25 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 07:48:34 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 07:52:45 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 08:11:13 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-20 08:11:13 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-20 08:12:19 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 08:16:31 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 08:18:18 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 08:19:53 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-20 08:32:53 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-20 08:32:53 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-20 08:37:02 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-20 08:39:32 | planner  | INFO    | Plan oluşturuldu | risk=medium | steps=2 | forbidden=False
+2026-04-21 02:06:48 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-21 02:06:48 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-21 02:11:20 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-21 02:11:20 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-21 02:13:55 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-21 02:22:35 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-21 02:26:36 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-21 02:42:21 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-21 15:51:22 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-21 15:51:22 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-21 16:02:46 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-23 03:11:25 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-23 03:11:25 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-23 03:14:00 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-23 03:14:00 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-23 03:16:25 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-23 03:24:25 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-23 03:24:25 | normalizer | DEBUG   | normalize | group=C | step=1 | action=CREATE_DIR | before='abc123' | zone=None → dokunulmadı
+2026-04-23 03:28:09 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-23 03:28:09 | normalizer | INFO    | normalize | group=A | step=1 | action=CREATE_DIR | before='%UserHome%\Desktop\testdir' | after='%USERPROFILE%\Desktop\testdir'
+2026-04-23 03:36:54 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-23 03:37:51 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-23 03:42:51 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-23 03:47:46 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-23 03:51:48 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-25 03:21:33 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-25 03:21:33 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-25 03:22:15 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-25 03:22:15 | normalizer | DEBUG   | normalize | no_match | step=1 | action=LIST_DIR | target='%USERPROFILE%\Belgeler' → dokunulmadı
+2026-04-25 03:22:15 | normalizer | DEBUG   | normalize | no_match | step=2 | action=CREATE_DIR | target='%USERPROFILE%\Masaüstü\abc123' → dokunulmadı
+2026-04-25 03:57:43 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-25 03:57:43 | normalizer | DEBUG   | normalize | no_match | step=2 | action=CREATE_DIR | target='%USERPROFILE%\Desktop\abc123' → dokunulmadı
+2026-04-25 04:32:10 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-25 04:32:10 | normalizer | DEBUG   | normalize | no_match | step=1 | action=LIST_DIR | target='%USERPROFILE%\Documents' → dokunulmadı
+2026-04-25 04:32:10 | normalizer | DEBUG   | normalize | no_match | step=2 | action=CREATE_DIR | target='%USERPROFILE%\Desktopcg456' → dokunulmadı
+2026-04-26 13:51:12 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-26 13:51:12 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-26 13:51:29 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-26 13:51:29 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-26 13:54:38 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-26 13:54:38 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-26 13:56:52 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-26 13:56:52 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-26 13:57:42 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-26 13:57:42 | normalizer | DEBUG   | normalize | no_match | step=1 | action=LIST_DIR | target='%USERPROFILE%\Desktop' → dokunulmadı
+2026-04-26 13:57:42 | normalizer | DEBUG   | normalize | no_match | step=2 | action=LIST_DIR | target='%USERPROFILE%\Documents' → dokunulmadı
+2026-04-26 14:28:03 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-26 14:28:03 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-26 14:30:16 | planner  | ERROR   | LLM iletişim hatası | Ollama 120 saniyede cevap vermedi.
+2026-04-26 14:30:16 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 120 saniyede cevap vermedi.
+2026-04-26 14:31:26 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-26 14:33:49 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-27 13:56:35 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-27 13:56:35 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-27 13:59:34 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-27 14:01:45 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-27 14:03:33 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-27 14:05:34 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-27 14:07:52 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-28 03:20:22 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 03:20:22 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 03:25:18 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 03:25:18 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 03:28:40 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-28 03:31:55 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-28 03:34:21 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 03:35:57 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-28 03:46:07 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 03:46:07 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 04:35:54 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 04:35:54 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 04:38:04 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 04:43:22 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 05:20:44 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 05:20:44 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 05:22:28 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 06:19:34 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 06:19:34 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 06:22:49 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 07:30:31 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 07:30:31 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 07:30:44 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 07:30:44 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 07:30:52 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 07:30:52 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 07:35:09 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 07:35:09 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-28 07:39:18 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 07:39:18 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 07:42:04 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 07:53:55 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 07:53:55 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 07:57:06 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 08:02:20 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 08:04:56 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 08:27:45 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 08:27:45 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 08:29:48 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 08:32:08 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-28 08:35:12 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 09:00:38 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 09:00:38 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 09:02:39 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-04-28 09:19:25 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 09:19:25 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 09:32:52 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 09:32:52 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 09:35:03 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 10:12:15 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 10:12:15 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 10:38:33 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-28 10:38:33 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-28 10:42:25 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-28 10:46:49 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-29 13:07:28 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-29 13:07:28 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-04-29 13:12:07 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:12:07 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:16:25 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:16:25 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:23:25 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:23:25 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:26:00 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-29 13:35:01 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:35:01 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:44:58 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:44:58 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-04-29 13:48:40 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-04-29 13:48:40 | normalizer | INFO    | normalize | group=B | CREATE_DIR kaldırıldı | step=1 | target='Desktop' | kullanıcı klasör belirtmedi
+2026-05-02 22:43:44 | planner  | ERROR   | LLM iletişim hatası | Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-05-02 22:43:44 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama'ya bağlanılamadı. Ollama çalışıyor mu?
+2026-05-02 22:48:53 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-02 22:48:53 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-02 22:53:00 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-02 22:53:00 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-02 23:15:01 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-02 23:15:01 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-02 23:18:44 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-05-02 23:21:20 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False

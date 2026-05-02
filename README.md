@@ -1,7 +1,28 @@
 # Yerel Güvenli Ajan v1.4
 
-Yerel makinede çalışan, güvenlik öncelikli masaüstü ajanı.
-Gerçek işlem yapar — plan üretir, simüle eder, onay alır, uygular.
+> ⚠️ **KRİTİK UYARI**  
+> Bu proje deneysel bir yerel masaüstü ajan sistemidir.  
+>  
+> - Varsayılan olarak **simülasyon modunda çalışır**  
+> - Gerçek işlemler **kullanıcı onayı olmadan yapılmaz**  
+> - Yanlış kullanım **istenmeyen sonuçlara yol açabilir**  
+>  
+> **Sorumluluk tamamen kullanıcıya aittir.**
+
+---
+
+## 🚀 Ne Yapar?
+
+Yerel makinede çalışan, **kontrol odaklı ve güvenli** bir ajan sistemidir.
+
+- Komut alır
+- Plan üretir (LLM)
+- Güvenlik katmanlarından geçirir
+- Simüle eder
+- Kullanıcı onayı alır
+- Gerçek işlemi uygular
+
+---
 
 ## Mimari
 

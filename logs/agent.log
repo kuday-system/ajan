@@ -202,3 +202,40 @@ steps.0.reason
 2026-05-02 23:15:01 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
 2026-05-02 23:18:44 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
 2026-05-02 23:21:20 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-05-04 00:13:53 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-04 00:13:53 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-04 00:16:04 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 00:16:04 | normalizer | DEBUG   | normalize | no_match | step=1 | action=OPEN_URL | target='https:\www.youtube.com' → dokunulmadı
+2026-05-04 00:17:30 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=2 | forbidden=False
+2026-05-04 00:17:30 | normalizer | DEBUG   | normalize | no_match | step=1 | action=OPEN_URL | target='https:\www.youtube.com\' → dokunulmadı
+2026-05-04 00:17:30 | normalizer | DEBUG   | normalize | no_match | step=2 | action=WEB_SEARCH | target='müzik' → dokunulmadı
+2026-05-04 01:19:19 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-04 01:19:19 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-04 01:22:29 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 01:22:29 | normalizer | DEBUG   | normalize | no_match | step=1 | action=WEB_SEARCH | target='Sezen Aksu Gülümse Müziği' → dokunulmadı
+2026-05-04 01:27:49 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 01:27:49 | normalizer | DEBUG   | normalize | no_match | step=1 | action=OPEN_URL | target='https:\www.youtube.com' → dokunulmadı
+2026-05-04 01:29:01 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 01:29:01 | normalizer | DEBUG   | normalize | no_match | step=1 | action=OPEN_URL | target='https:\www.youtube.com' → dokunulmadı
+2026-05-04 01:39:00 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-04 01:39:00 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-04 01:40:49 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 01:40:49 | normalizer | DEBUG   | normalize | no_match | step=1 | action=OPEN_URL | target='https:\www.youtube.com' → dokunulmadı
+2026-05-04 01:48:43 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-04 01:48:43 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-04 02:03:51 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-04 02:03:51 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-04 02:07:18 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 02:07:18 | normalizer | DEBUG   | normalize | no_match | step=1 | action=OPEN_URL | target='https:\www.youtube.com' → dokunulmadı
+2026-05-04 02:21:03 | planner  | ERROR   | LLM iletişim hatası | Ollama 240 saniyede cevap vermedi.
+2026-05-04 02:21:03 | app      | ERROR   | PlannerError | LLM yanıt vermedi: Ollama 240 saniyede cevap vermedi.
+2026-05-04 02:25:01 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 02:25:01 | normalizer | DEBUG   | normalize | no_match | step=1 | action=OPEN_URL | target='https:\www.youtube.com' → dokunulmadı
+2026-05-04 02:30:57 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 02:30:57 | normalizer | INFO    | normalize | group=C | step=1 | action=OPEN_URL | before='https:\\www.youtube.com' | after='https://www.youtube.com'
+2026-05-04 02:32:59 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 02:32:59 | normalizer | DEBUG   | normalize | no_match | step=1 | action=WEB_SEARCH | target='Barış Manço dönence müziğini' → dokunulmadı
+2026-05-04 02:35:10 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 02:35:10 | normalizer | DEBUG   | normalize | no_match | step=1 | action=WEB_SEARCH | target='kudim.com.tr' → dokunulmadı
+2026-05-04 02:37:52 | planner  | INFO    | Plan oluşturuldu | risk=low | steps=1 | forbidden=False
+2026-05-04 02:37:52 | normalizer | INFO    | normalize | group=C | step=1 | action=OPEN_URL | before='https:\\www.kudim.com.tr' | after='https://www.kudim.com.tr'

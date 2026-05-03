@@ -1,11 +1,30 @@
-# consistency_checker.py v1.1
+# consistency_checker.py v1.4
 # Yerel Güvenli Ajan v1.4
 #
-# Değişiklikler v1.0'a göre:
+# Değişiklikler v1.3'e göre:
+#   FIX 7 — _check_summary_steps action-aware hale getirildi.
+#            Önceki davranış: summary keyword içermiyorsa her zaman ask_clarification.
+#            Yeni davranış:
+#              - Summary boş / placeholder ise → ask_clarification (değişmedi).
+#              - Summary doluysa VE plan içinde OPEN_URL veya WEB_SEARCH varsa
+#                → summary action keyword içermese bile kabul et.
+#                Çünkü internet action zaten işlemi belirtiyor.
+#              - Dosya action'ları için keyword kontrolü eskisi gibi devam eder.
+#            Geçerli örnek:
+#              summary="YouTube", action=OPEN_URL  → geçer
+#              summary="YouTube", action=WEB_SEARCH → geçer
+#            Geçersiz (clarify) örnek:
+#              summary="string" → clarify
+#              summary=""       → clarify
+#              summary="özet"   → clarify
+#
+# Önceki düzeltmeler (v1.1–v1.3'ten taşındı):
 #   FIX 1 — Scope kontrolü: absolute path, UNC, C:\ → scope dışı → deny
 #   FIX 2 — Risk kontrolü: DELETE_FILE + risk=low → deny (clarify değil)
 #   FIX 3 — Multi intent çelişki: read + delete gibi zıt intent → deny
 #   FIX 4 — Summary check: substring yerine action keyword overlap → false positive azaldı
+#   FIX 5 — Summary check: OPEN_URL / WEB_SEARCH kelimeleri eklendi
+#   FIX 6 — check_consistency son dönüşü "allow" → "ask_user" olarak düzeltildi.
 #
 # Konum: validator → consistency_checker → rule_engine
 # Kapsam dışı: path güvenliği → rule_engine | format/yapı → validator
@@ -56,6 +75,8 @@ _RE_ABS_WIN  = re.compile(r"^[a-zA-Z]:[/\\]")   # C:\ veya C:/
 _RE_ABS_UNIX = re.compile(r"^/")                 # /home/... veya /
 _RE_UNC      = re.compile(r"^\\\\|^//")          # \\server veya //server
 
+# FIX 7 — Internet action'ları: bu action'lar varsa summary keyword kontrolü atlanır.
+_INTERNET_ACTIONS = {ActionType.OPEN_URL, ActionType.WEB_SEARCH}
 
 # ---------------------------------------------------------------------------
 # Yardımcılar
@@ -132,21 +153,25 @@ def _check_goal_action(plan: AgentPlan, user_text: str) -> tuple[list[str], list
 
 
 # ---------------------------------------------------------------------------
-# Kontrol 2 — Summary ↔ Steps uyumu  (FIX 4)
+# Kontrol 2 — Summary ↔ Steps uyumu  (FIX 4 + FIX 5 + FIX 7)
 # ---------------------------------------------------------------------------
 
 def _check_summary_steps(plan: AgentPlan) -> list[str]:
     """
     FIX 4: Substring yerine action keyword overlap kullan.
-    Summary'de action tipini çağrıştıran kelime varsa → uyumlu say.
-    Sadece placeholder/boş summary → clarify.
-    False positive azaldı: hedef adı eşleşmesi artık zorunlu değil.
+    FIX 5: OPEN_URL ve WEB_SEARCH için tipik summary kelimeleri eklendi.
+    FIX 7: Action-aware kontrol.
+           Plan içinde OPEN_URL veya WEB_SEARCH varsa ve summary boş/placeholder
+           değilse → keyword kontrolü atlanır, doğrudan geçer.
+           Çünkü internet action zaten işlemi belirtiyor; summary sadece hedefi
+           (ör. "YouTube") belirtmek için yeterlidir.
+           Dosya action'larında keyword kontrolü eskisi gibi devam eder.
     """
     clarify: list[str] = []
 
     summary = (plan.summary or "").strip().lower()
 
-    # Placeholder veya boş
+    # Placeholder veya boş → her zaman clarify (FIX 7 bile kurtaramaz)
     _PLACEHOLDERS = {"string", "text", "özet", "summary", "açıklama", "plan"}
     if not summary or summary in _PLACEHOLDERS:
         clarify.append(
@@ -154,10 +179,23 @@ def _check_summary_steps(plan: AgentPlan) -> list[str]:
         )
         return clarify
 
-    # Summary'de en az bir action türüne işaret eden kelime var mı?
+    # FIX 7 — Plan internet action içeriyorsa keyword kontrolünü atla.
+    actions = _actions_in_plan(plan)
+    if actions & _INTERNET_ACTIONS:
+        # Summary doluysa ve placeholder değilse internet action için yeterli.
+        return clarify
+
+    # Dosya action'ları için keyword kontrolü (FIX 4 + FIX 5 korundu)
     _SUMMARY_ACTION_KEYWORDS = re.compile(
-        r"\b(oku|yaz|sil|taşı|kopyala|listele|oluştur|ekle|kaydet|"
-        r"read|write|delete|move|copy|list|create|append|save|show)\b",
+        r"\b("
+        # Dosya / klasör action'ları (FIX 4)
+        r"oku|yaz|sil|taşı|kopyala|listele|oluştur|ekle|kaydet|"
+        r"read|write|delete|move|copy|list|create|append|save|show|"
+        # FIX 5 — OPEN_URL action kelimeleri
+        r"aç|açıl|açılır|açılacak|open|ziyaret|browse|"
+        # FIX 5 — WEB_SEARCH action kelimeleri
+        r"ara|arama|aranır|aranacak|search|tara|bul|find"
+        r")\b",
         re.I,
     )
     if not _SUMMARY_ACTION_KEYWORDS.search(summary):
@@ -206,6 +244,7 @@ def _check_scope_target(plan: AgentPlan) -> list[str]:
     """
     FIX 1: Absolute path (C:\\, /, UNC) → her zaman scope dışı → deny.
     Farklı zone prefix → deny (eski davranış korundu).
+    Internet scope (OPEN_URL / WEB_SEARCH) → prefix kontrolü yapılmaz.
     """
     deny: list[str] = []
 
@@ -213,7 +252,8 @@ def _check_scope_target(plan: AgentPlan) -> list[str]:
     expected_prefix = _SCOPE_TO_PREFIX.get(scope)
 
     if expected_prefix is None:
-        return deny  # "User", "Internal" vb. → kontrol edilmez
+        # "Internet", "User", "Internal" vb. → prefix kontrolü yapılmaz
+        return deny
 
     for step in plan.steps:
         target = step.target
@@ -244,7 +284,7 @@ def _check_scope_target(plan: AgentPlan) -> list[str]:
 def check_consistency(plan: AgentPlan, user_text: str) -> PlanReview:
     """
     Döner:
-        PlanReview(decision="allow")             → sorun yok
+        PlanReview(decision="ask_user")          → tüm kontroller geçti, kullanıcı onayı bekleniyor
         PlanReview(decision="ask_clarification") → belirsiz/şüpheli
         PlanReview(decision="deny")              → ciddi çelişki
     """
@@ -256,7 +296,7 @@ def check_consistency(plan: AgentPlan, user_text: str) -> PlanReview:
     all_deny.extend(d)
     all_clarify.extend(c)
 
-    # 2) Summary ↔ Steps  (FIX 4)
+    # 2) Summary ↔ Steps  (FIX 4 + FIX 5 + FIX 7)
     all_clarify.extend(_check_summary_steps(plan))
 
     # 3) Risk ↔ Action  (FIX 2)
@@ -267,7 +307,7 @@ def check_consistency(plan: AgentPlan, user_text: str) -> PlanReview:
     # 4) Scope ↔ Target  (FIX 1)
     all_deny.extend(_check_scope_target(plan))
 
-    # Karar: deny > ask_clarification > allow
+    # Karar: deny > ask_clarification > ask_user
     if all_deny:
         reasons = all_deny + all_clarify
         logger.warning(f"consistency | DENY | {reasons}")
@@ -277,5 +317,9 @@ def check_consistency(plan: AgentPlan, user_text: str) -> PlanReview:
         logger.info(f"consistency | ASK_CLARIFICATION | {all_clarify}")
         return PlanReview(decision="ask_clarification", reasons=all_clarify)
 
-    logger.debug("consistency | ALLOW")
-    return PlanReview(decision="allow", reasons=[])
+    # FIX 6 — "allow" PlanReview'da geçersiz değer; reasons boş olamaz.
+    logger.debug("consistency | ASK_USER")
+    return PlanReview(
+        decision="ask_user",
+        reasons=["Tutarlılık kontrolü geçti. Kullanıcı onayı bekleniyor."],
+    )

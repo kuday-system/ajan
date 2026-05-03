@@ -1,14 +1,8 @@
-# rule_engine.py v1.4.1
-# Değişiklikler v1.4'e göre:
-#   TEMİZLİK — SAFE_ACTIONS seti kaldırıldı (hiç kullanılmıyordu, kafa karışıklığı yaratıyordu)
-#
-# Değişiklikler v1.3.1'e göre:
-#   BUG 3  — Zone resolve: normalize edilmiş path ile ALLOWED_USER_ZONES karşılaştırması düzeltildi
-#             (resolved.resolve() ile case-insensitive birebir eşleşme)
-#   BUG 4  — LIST_DIR ve READ_FILE "gerçek yürütme" olarak algılanmıyacak
-#   BUG 5  — requires_real_execution yalnızca MUTATING action içeren planlarda dikkate alınıyor
-#   BUG 12 — requires_real_execution flag: READ/LIST/CREATE_DIR izinli akışta yok sayılıyor
-#   Q1     — Duplicate reason mesajları tek noktada temizleniyor (warnings da dahil)
+# rule_engine.py v1.6.0
+# Değişiklikler v1.5.0'a göre:
+#   - check_path_hardened: WEB_SEARCH için early-return eklendi
+#   - INTERNET_ACTIONS ActionGroup.INTERNET'ten geldiği için WEB_SEARCH otomatik kapsanır
+#   - _check_scope_action_consistency değişmedi (INTERNET_ACTIONS set'i zaten genişledi)
 
 import os
 import re
@@ -30,9 +24,6 @@ from config import (
 )
 from models import AgentPlan, ActionGroup, ActionType, PlanReview
 
-# --- Mutating Action Kümesi ---
-# requires_real_execution flag'i yalnızca bu action'lar için dikkate alınır.
-
 MUTATING_ACTIONS = {
     ActionType.WRITE_FILE,
     ActionType.APPEND_FILE,
@@ -41,8 +32,11 @@ MUTATING_ACTIONS = {
     ActionType.COPY_FILE,
 }
 
+# --- Internet scope sabitleri ---
+INTERNET_ACTIONS = ActionGroup.INTERNET          # {OPEN_URL, WEB_SEARCH}
+INTERNET_SCOPE   = "Internet"
+FILE_SCOPES      = {"Desktop", "Documents", "Downloads", "UserHome", "User"}
 
-# --- Windows Reserved Names ---
 
 _RESERVED_NAMES = {
     "con", "prn", "aux", "nul",
@@ -52,11 +46,8 @@ _RESERVED_NAMES = {
     "lpt6", "lpt7", "lpt8", "lpt9",
 }
 
-# --- Bare Zone Labels ---
 _BARE_ZONE_LABELS = {"desktop", "documents", "downloads", "userhome"}
 
-
-# --- Path Zone ---
 
 class PathZone(Enum):
     SYSTEM_SPACE  = "system_space"
@@ -66,8 +57,6 @@ class PathZone(Enum):
     UNKNOWN       = "unknown"
 
 
-# --- Yardımcı ---
-
 def _normalize(text: str) -> str:
     if PATH_NORMALIZE:
         return text.lower().replace("\\", "/")
@@ -76,15 +65,12 @@ def _normalize(text: str) -> str:
 
 def _sanitize_path_text(raw: str) -> str:
     text = raw.strip().strip('"\'')
-
-    # Geçersiz env variable mapping
     text = text.replace("%UserHome%", "%USERPROFILE%")
     text = text.replace("%userHome%", "%USERPROFILE%")
     text = text.replace("%userhome%", "%USERPROFILE%")
     text = text.replace("%Desktop%", "%USERPROFILE%\\Desktop")
     text = text.replace("%Documents%", "%USERPROFILE%\\Documents")
     text = text.replace("%Downloads%", "%USERPROFILE%\\Downloads")
-
     text = os.path.expandvars(text)
     username = os.environ.get("USERNAME") or os.environ.get("USER") or "user"
     text = text.replace("[Username]", username).replace("[username]", username)
@@ -94,16 +80,12 @@ def _sanitize_path_text(raw: str) -> str:
 
 def _classify_path_text(path_text: str) -> PathZone:
     p = path_text
-
     if p in {"c:", "c:/"}:
         return PathZone.SYSTEM_SPACE
-
     if any(hint in p for hint in ["c:/windows", "c:/system32", "programdata"]):
         return PathZone.SYSTEM_SPACE
-
     if any(hint in p for hint in ["c:/program files", "c:/program files (x86)"]):
         return PathZone.PROGRAM_SPACE
-
     if p == "desktop" or p.startswith(("desktop/", "desktop\\")):
         return PathZone.USER_SPACE
     if p == "documents" or p.startswith(("documents/", "documents\\")):
@@ -114,11 +96,8 @@ def _classify_path_text(path_text: str) -> PathZone:
         return PathZone.USER_SPACE
     if "/users/" in p or p.startswith("c:/users"):
         return PathZone.USER_SPACE
-
     return PathZone.UNKNOWN
 
-
-# --- Hardened Path Yardımcıları ---
 
 def _is_unc(path: str) -> bool:
     return path.startswith("\\\\") or path.startswith("//")
@@ -150,15 +129,10 @@ def _resolve_to_path(raw: str) -> Path | None:
 
 
 def _in_zone(path: Path, zones: list[Path]) -> bool:
-    """
-    BUG 3: resolve() ile normalize edilmiş path karşılaştırması.
-    OneDrive ve sembolik link durumlarında doğru eşleşme sağlar.
-    """
     try:
         resolved_path = path.resolve()
     except Exception:
         resolved_path = path
-
     for zone in zones:
         if zone is None:
             continue
@@ -174,7 +148,9 @@ def _in_zone(path: Path, zones: list[Path]) -> bool:
     return False
 
 
-# --- Hardened Path Kontrol ---
+# --- Internet action'ları için path validation yok ---
+_INTERNET_ACTIONS_NO_PATH = ActionGroup.INTERNET  # {OPEN_URL, WEB_SEARCH}
+
 
 def check_path_hardened(
     raw_target: str,
@@ -183,13 +159,13 @@ def check_path_hardened(
 ) -> Tuple[List[str], List[str]]:
     """
     Hardened path kontrolü.
-    Akış: temizle → UNC → device → drive-relative → reserved →
-          traversal → resolve → action/zone çapraz kontrol
 
-    BUG 3: _in_zone artık resolve() ile karşılaştırıyor.
-
-    Dönüş: (hard_violations, warnings)
+    OPEN_URL ve WEB_SEARCH path action değildir — path validation uygulanmaz.
+    URL/query kontrolü executor handler'da yapılır.
     """
+    if action in _INTERNET_ACTIONS_NO_PATH:
+        return [], []
+
     raw_target = os.path.expandvars(raw_target)
 
     hard = []
@@ -260,7 +236,6 @@ def check_path_hardened(
                 )
             return hard, warnings
 
-        # BUG 3: _in_zone artık resolve() ile doğru karşılaştırıyor
         if _in_zone(resolved, ALLOWED_USER_ZONES):
             return hard, warnings
 
@@ -275,11 +250,8 @@ def check_path_hardened(
     return hard, warnings
 
 
-# --- Plan Structure Kontrolü ---
-
 def _resolve_zone_key(target: str) -> str | None:
     sanitized = _sanitize_path_text(target)
-
     _SHORT_MAP = {
         "desktop":   "desktop",
         "documents": "documents",
@@ -327,23 +299,41 @@ def _is_dependent_chain(steps) -> bool:
     for i in range(len(steps) - 1):
         current = steps[i]
         nxt = steps[i + 1]
-
         current_zone = _resolve_zone_key(current.target)
         next_zone = _resolve_zone_key(nxt.target)
-
         same_zone = current_zone is not None and current_zone == next_zone
         is_known_chain = (current.action, nxt.action) in _DEPENDENT_CHAINS
-
         if not (same_zone and is_known_chain):
             return False
     return True
+
+
+def _check_scope_action_consistency(plan: AgentPlan) -> List[str]:
+    hard = []
+    scope = plan.permission_scope
+
+    for step in plan.steps:
+        if step.action in INTERNET_ACTIONS:
+            if scope != INTERNET_SCOPE:
+                hard.append(
+                    f"[step {step.step_no}] SCOPE_MISMATCH: "
+                    f"{step.action.value} action'ı 'Internet' scope gerektirir, "
+                    f"mevcut scope: '{scope}'"
+                )
+        elif step.action in ActionGroup.USER_FILE:
+            if scope == INTERNET_SCOPE:
+                hard.append(
+                    f"[step {step.step_no}] SCOPE_MISMATCH: "
+                    f"Dosya action'ı ({step.action.value}) 'Internet' scope ile çalışamaz."
+                )
+
+    return hard
 
 
 def _check_plan_structure(plan: AgentPlan) -> Tuple[List[str], List[str]]:
     hard = []
     warnings = []
 
-    # CREATE_DIR invalid target format kontrolü
     for step in plan.steps:
         if step.action == ActionType.CREATE_DIR:
             normalized = step.target.strip().lower().replace("\\", "/")
@@ -366,7 +356,6 @@ def _check_plan_structure(plan: AgentPlan) -> Tuple[List[str], List[str]]:
                 if msg_h not in hard:
                     hard.append(msg_h)
 
-    # CREATE_DIR bare zone kontrolü
     for step in plan.steps:
         if step.action == ActionType.CREATE_DIR:
             normalized = step.target.strip().lower().replace("\\", "/")
@@ -389,9 +378,10 @@ def _check_plan_structure(plan: AgentPlan) -> Tuple[List[str], List[str]]:
 
     user_zones = set()
     for step in plan.steps:
-        key = _resolve_zone_key(step.target)
-        if key is not None:
-            user_zones.add(key)
+        if step.action in ActionGroup.USER_FILE:
+            key = _resolve_zone_key(step.target)
+            if key is not None:
+                user_zones.add(key)
 
     if len(user_zones) > 1 and not _is_dependent_chain(plan.steps):
         msg_w = (
@@ -407,32 +397,22 @@ def _check_plan_structure(plan: AgentPlan) -> Tuple[List[str], List[str]]:
     return hard, warnings
 
 
-# --- Kontrol fonksiyonları ---
-
 def _check_user_text(user_text: str) -> List[str]:
     reasons = []
     normalized = _normalize(user_text)
-
     for keyword in FORBIDDEN_KEYWORDS:
         if keyword in normalized:
             reasons.append(f"[kullanıcı metni] Yasaklı anahtar kelime: '{keyword}'")
-
     for path_hint in FORBIDDEN_PATH_HINTS:
         if _normalize(path_hint) in normalized:
             reasons.append(f"[kullanıcı metni] Yasaklı path: '{path_hint}'")
-
     for ext in FORBIDDEN_EXTENSIONS:
         if ext in normalized:
             reasons.append(f"[kullanıcı metni] Yasaklı uzantı: '{ext}'")
-
     return reasons
 
 
 def _plan_has_mutating_action(plan: AgentPlan) -> bool:
-    """
-    BUG 4, 5, 12: Planda en az bir MUTATING action var mı?
-    READ_FILE, LIST_DIR, CREATE_DIR gibi safe action'lar mutating sayılmaz.
-    """
     return any(step.action in MUTATING_ACTIONS for step in plan.steps)
 
 
@@ -452,10 +432,11 @@ def _check_plan(plan: AgentPlan) -> Tuple[List[str], List[str]]:
     if plan.risk_level in ("high", "critical"):
         hard.append(f"[plan] Risk seviyesi çok yüksek: {plan.risk_level}")
 
-    # BUG 4, 5, 12: requires_real_execution yalnızca MUTATING action varsa dikkate alınır.
-    # LIST_DIR / READ_FILE gibi safe action'lar bu flag'i tetiklemez.
     if plan.requires_real_execution and _plan_has_mutating_action(plan):
         hard.append("[plan] Gerçek yürütme isteniyor, v1'de izin verilmez.")
+
+    scope_hard = _check_scope_action_consistency(plan)
+    hard.extend(scope_hard)
 
     for step in plan.steps:
         step_hard, step_warn = check_path_hardened(
@@ -488,25 +469,20 @@ def _check_plan(plan: AgentPlan) -> Tuple[List[str], List[str]]:
     hard.extend(structure_hard)
     warnings.extend(structure_warn)
 
-    # Q1: Duplicate temizliği — hard ve warnings ayrı ayrı
     hard = list(dict.fromkeys(hard))
     warnings = list(dict.fromkeys(warnings))
 
     return hard, warnings
 
 
-# --- RuleEngine ---
-
 class RuleEngine:
     def review(self, user_text: str, plan: AgentPlan) -> PlanReview:
         user_hard = _check_user_text(user_text)
         plan_hard, plan_warnings = _check_plan(plan)
 
-        # Q1: Birleşik duplicate temizliği
         all_hard = list(dict.fromkeys(user_hard + plan_hard))
 
         if all_hard:
-            # MULTI_TASK veya CREATE_DIR_BARE_ZONE → ask_clarification
             if all(
                 "MULTI_TASK_DETECTED" in r or
                 "CREATE_DIR_BARE_ZONE" in r or
@@ -527,7 +503,6 @@ class RuleEngine:
             )
 
         reasons = ["Plan kurallara uygun. Kullanıcı onayı bekleniyor."]
-        # Q1: plan_warnings zaten deduplicate edilmiş geldi
         reasons.extend(plan_warnings)
 
         return PlanReview(decision="ask_user", reasons=reasons)

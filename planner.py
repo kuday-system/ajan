@@ -11,6 +11,7 @@ from prompts import build_prompt
 from config import DEFAULT_MODEL
 
 logger = logging.getLogger("planner")
+_diag  = logging.getLogger("diag.planner")
 
 
 class PlannerError(Exception):
@@ -39,12 +40,33 @@ class Planner:
         for i, step in enumerate(raw_dict.get("steps", [])):
             step["action"] = self._parse_action(step.get("action", ""), i)
 
+        # [DIAG] raw_dict içinde steps[0].target — action normalize sonrası, Pydantic öncesi
+        try:
+            steps_raw = raw_dict.get("steps", [])
+            if steps_raw:
+                _diag.debug(
+                    f"[DIAG] raw_dict steps[0].target repr (pre-pydantic): "
+                    f"{repr(steps_raw[0].get('target'))}"
+                )
+        except Exception:
+            pass
+
         # 4) Pydantic validation
         try:
             plan = AgentPlan(**raw_dict)
         except ValidationError as e:
             logger.error(f"AgentPlan validation hatası | {e}")
             raise PlannerError(f"Plan şema doğrulaması başarısız: {e}") from e
+
+        # [DIAG] Pydantic sonrası plan.steps[0].target repr
+        try:
+            if plan.steps:
+                _diag.debug(
+                    f"[DIAG] plan.steps[0].target repr (post-pydantic): "
+                    f"{repr(plan.steps[0].target)}"
+                )
+        except Exception:
+            pass
 
         logger.info(
             f"Plan oluşturuldu | risk={plan.risk_level} | "

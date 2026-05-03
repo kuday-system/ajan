@@ -1,22 +1,16 @@
-# models.py v1.2.4
-# Değişiklikler v1.2.3'e göre:
-#   - ActionGroup.MUTATING düzeltildi:
-#     DELETE_FILE ve COPY_FILE eklendi, CREATE_DIR korundu.
-#     rule_engine.py MUTATING_ACTIONS ile tutarsızlık giderildi.
-#     Not: rule_engine.py'e dokunulmadı.
+# models.py v1.3.0
+# Değişiklikler v1.2.5'e göre:
+#   - ActionType.WEB_SEARCH eklendi
+#   - ActionGroup.INTERNET'e WEB_SEARCH eklendi
 
 from enum import Enum
 from typing import List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-# --- Risk ve Karar Tipleri ---
-
 RiskLevel = Literal["low", "medium", "high", "critical"]
 PermissionDecision = Literal["deny", "ask_user", "ask_clarification"]
 
-
-# --- Action Enum ---
 
 class ActionType(str, Enum):
     READ_FILE            = "READ_FILE"
@@ -27,12 +21,12 @@ class ActionType(str, Enum):
     DELETE_FILE          = "DELETE_FILE"
     CREATE_DIR           = "CREATE_DIR"
     LIST_DIR             = "LIST_DIR"
+    OPEN_URL             = "OPEN_URL"
+    WEB_SEARCH           = "WEB_SEARCH"
     INTERNAL_LOG_WRITE   = "INTERNAL_LOG_WRITE"
     INTERNAL_STATE_WRITE = "INTERNAL_STATE_WRITE"
     INTERNAL_STATE_READ  = "INTERNAL_STATE_READ"
 
-
-# --- Action Grupları ---
 
 class ActionGroup:
     USER_FILE = {
@@ -66,8 +60,11 @@ class ActionGroup:
         ActionType.MOVE_FILE,
     }
 
+    INTERNET = {
+        ActionType.OPEN_URL,
+        ActionType.WEB_SEARCH,
+    }
 
-# --- Yardımcı ---
 
 def _strip_list(values: List[str]) -> List[str]:
     return [v.strip() for v in values if v.strip()]
@@ -79,8 +76,6 @@ def _require_non_empty(value: str, field_name: str) -> str:
         raise ValueError(f"{field_name} boş olamaz")
     return stripped
 
-
-# --- Modeller ---
 
 class UserCommand(BaseModel):
     raw_text: str = Field(..., min_length=1)
@@ -96,7 +91,7 @@ class PlanStep(BaseModel):
     action: ActionType
     target: str = Field(..., min_length=1)
     reason: str = Field(..., min_length=1)
-    content: Optional[str] = None          # WRITE_FILE / APPEND_FILE için; diğer action'larda None
+    content: Optional[str] = None
 
     @model_validator(mode="after")
     def normalize(self):

@@ -1,4 +1,3 @@
-
 import json
 import requests
 from typing import Dict, Any
@@ -44,7 +43,11 @@ class OllamaClient:
             raise ValueError("Ollama geçerli JSON API cevabı döndürmedi.") from e
 
         raw = data.get("response", None)
-        
+
+        # [DIAG] LLM'den gelen ham string — backslash/slash farkını görmek için repr()
+        import logging
+        _diag = logging.getLogger("diag.ollama")
+        _diag.debug(f"[DIAG] LLM raw response repr: {repr(raw)}")
 
         if raw is None:
             raise ValueError("Ollama cevabında 'response' alanı yok.")
@@ -54,6 +57,18 @@ class OllamaClient:
             raise ValueError("Ollama boş cevap döndürdü.")
 
         try:
-            return json.loads(raw)
+            parsed = json.loads(raw)
         except json.JSONDecodeError as e:
             raise ValueError(f"Model geçerli JSON döndürmedi: {raw}") from e
+
+        # [DIAG] Parse edilmiş JSON içinde steps[0].target repr
+        try:
+            steps = parsed.get("steps", [])
+            if steps:
+                _diag.debug(
+                    f"[DIAG] parsed steps[0].target repr: {repr(steps[0].get('target'))}"
+                )
+        except Exception:
+            pass
+
+        return parsed

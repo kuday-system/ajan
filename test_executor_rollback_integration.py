@@ -1,8 +1,7 @@
-# test_executor_rollback_integration.py v1.1
-# Değişiklikler v1.0'a göre:
-#   FIX 1 — target absolute path yerine kısa etiket formatı kullanıyor:
-#            "desktop/Test/a.txt" gibi. DESKTOP_DIR patch ile tmp_path'e yönlendiriliyor.
-#   FIX 2 — Her testte lockbox.verify(locked) is True assertion eklendi.
+# test_executor_rollback_integration.py v1.2
+# Değişiklikler v1.1'e göre:
+#   FIX — _patch_zones içine rollback_manager._ALLOWED_WRITE_ZONES patch'i eklendi.
+#          Rollback sırasında manager tmp_path'i izinli zone olarak tanımalı.
 #
 # Kapsam:
 #   - Executor.run() fail aldığında rollback_all tetikleniyor mu?
@@ -11,15 +10,12 @@
 #   - Başarılı execution'da rolled_back=False mı?
 #
 # Çalıştırma: pytest test_executor_rollback_integration.py -v
-#
-# Not: Testler gerçek dosya sistemi üzerinde çalışır (tmp_path).
-#      Executor, Lockbox, AgentPlan gerçek import edilir.
-#      LLM çağrısı yoktur — plan direkt oluşturulur.
 
 import pytest
 from pathlib import Path
 from unittest.mock import patch
 
+import rollback_manager
 from models import AgentPlan, ActionType, PlanStep, LockedPlan
 from executor import Executor
 from lockbox import PlanLockbox
@@ -57,8 +53,8 @@ def _lock_and_verify(plan: AgentPlan) -> tuple[PlanLockbox, "LockedPlan"]:
 def _patch_zones(tmp_path: Path):
     """
     DESKTOP_DIR → tmp_path olarak patch edilir.
-    target kısa etiket "desktop/..." formatında verilir;
-    executor _resolve_target ile tmp_path altına çözer.
+    rollback_manager._ALLOWED_WRITE_ZONES da aynı tmp_path ile patch edilir;
+    böylece rollback sırasında manager zone doğrulamasını geçer.
     """
     return [
         patch("executor.DESKTOP_DIR",          tmp_path),
@@ -77,6 +73,8 @@ def _patch_zones(tmp_path: Path):
         patch("rule_engine.DESKTOP_DIR",        tmp_path),
         patch("rule_engine.DOCUMENTS_DIR",      tmp_path),
         patch("rule_engine.DOWNLOADS_DIR",      tmp_path),
+        # FIX: rollback_manager zone'u da aynı tmp_path'e yönlendir
+        patch.object(rollback_manager, "_ALLOWED_WRITE_ZONES", {tmp_path}),
     ]
 
 
@@ -86,12 +84,6 @@ def _patch_zones(tmp_path: Path):
 # ---------------------------------------------------------------------------
 
 class TestSenaryoA:
-    """
-    Plan: CREATE_DIR(desktop/Test) → WRITE_FILE(desktop/Test/bad.exe)
-    WRITE_FILE EXTENSION_DENIED ile fail eder.
-    Rollback: Test klasörü boşsa silinmeli.
-    """
-
     def test_rolled_back_true(self, tmp_path):
         plan = _make_plan([
             {
@@ -111,7 +103,8 @@ class TestSenaryoA:
 
         patches = _patch_zones(tmp_path)
         with patches[0], patches[1], patches[2], patches[3], patches[4], \
-             patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+             patches[5], patches[6], patches[7], patches[8], patches[9], \
+             patches[10], patches[11]:
 
             lockbox, locked = _lock_and_verify(plan)
             executor = Executor(lockbox=lockbox)
@@ -139,7 +132,8 @@ class TestSenaryoA:
 
         patches = _patch_zones(tmp_path)
         with patches[0], patches[1], patches[2], patches[3], patches[4], \
-             patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+             patches[5], patches[6], patches[7], patches[8], patches[9], \
+             patches[10], patches[11]:
 
             lockbox, locked = _lock_and_verify(plan)
             executor = Executor(lockbox=lockbox)
@@ -168,7 +162,8 @@ class TestSenaryoA:
 
         patches = _patch_zones(tmp_path)
         with patches[0], patches[1], patches[2], patches[3], patches[4], \
-             patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+             patches[5], patches[6], patches[7], patches[8], patches[9], \
+             patches[10], patches[11]:
 
             lockbox, locked = _lock_and_verify(plan)
             executor = Executor(lockbox=lockbox)
@@ -183,11 +178,6 @@ class TestSenaryoA:
 # ---------------------------------------------------------------------------
 
 class TestSenaryoB:
-    """
-    Plan: WRITE_FILE(desktop/a.txt) → WRITE_FILE(desktop/bad.exe)
-    a.txt yazıldı → bad.exe EXTENSION_DENIED → a.txt rollback ile silindi.
-    """
-
     def test_dosya_silindi(self, tmp_path):
         good_file = tmp_path / "a.txt"
 
@@ -210,7 +200,8 @@ class TestSenaryoB:
 
         patches = _patch_zones(tmp_path)
         with patches[0], patches[1], patches[2], patches[3], patches[4], \
-             patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+             patches[5], patches[6], patches[7], patches[8], patches[9], \
+             patches[10], patches[11]:
 
             lockbox, locked = _lock_and_verify(plan)
             executor = Executor(lockbox=lockbox)
@@ -239,7 +230,8 @@ class TestSenaryoB:
 
         patches = _patch_zones(tmp_path)
         with patches[0], patches[1], patches[2], patches[3], patches[4], \
-             patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+             patches[5], patches[6], patches[7], patches[8], patches[9], \
+             patches[10], patches[11]:
 
             lockbox, locked = _lock_and_verify(plan)
             executor = Executor(lockbox=lockbox)
@@ -254,12 +246,6 @@ class TestSenaryoB:
 # ---------------------------------------------------------------------------
 
 class TestSenaryoC:
-    """
-    Plan: LIST_DIR(desktop) → WRITE_FILE(desktop/bad.exe)
-    LIST_DIR rollback_available=False → register edilmez.
-    rolled_back=False.
-    """
-
     def test_rolled_back_false(self, tmp_path):
         plan = _make_plan([
             {
@@ -279,7 +265,8 @@ class TestSenaryoC:
 
         patches = _patch_zones(tmp_path)
         with patches[0], patches[1], patches[2], patches[3], patches[4], \
-             patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+             patches[5], patches[6], patches[7], patches[8], patches[9], \
+             patches[10], patches[11]:
 
             lockbox, locked = _lock_and_verify(plan)
             executor = Executor(lockbox=lockbox)
@@ -295,12 +282,6 @@ class TestSenaryoC:
 # ---------------------------------------------------------------------------
 
 class TestSenaryoD:
-    """
-    Plan: CREATE_DIR(desktop/Test) → WRITE_FILE(desktop/Test/a.txt)
-    İkisi de başarılı.
-    rolled_back=False, dosyalar fiziksel olarak duruyor.
-    """
-
     def test_basarili_execution(self, tmp_path):
         test_dir  = tmp_path / "Test"
         test_file = test_dir / "a.txt"
@@ -323,7 +304,8 @@ class TestSenaryoD:
 
         patches = _patch_zones(tmp_path)
         with patches[0], patches[1], patches[2], patches[3], patches[4], \
-             patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+             patches[5], patches[6], patches[7], patches[8], patches[9], \
+             patches[10], patches[11]:
 
             lockbox, locked = _lock_and_verify(plan)
             executor = Executor(lockbox=lockbox)

@@ -1,9 +1,12 @@
-# prompts.py v1.4
-# Değişiklikler v1.3'e göre:
-#   Q2, Q3, Q6 — permission_scope daha spesifik üretiliyor
-#                 (UserHome yerine Desktop/Documents/Downloads bekleniyor)
-#   Q4, Q5     — Çıktı dili kullanıcı diliyle aynı olmalı kuralı eklendi
-#   BUG 12     — requires_real_execution=false zorunlu kural olarak vurgulandı
+# prompts.py v1.7
+# Değişiklikler v1.6'ya göre:
+#   - OPEN_URL KURALLARI genişletildi ve sertleştirildi:
+#       * URL scheme separator DAIMA :// olacak (: veya :\ veya :/ yasak)
+#       * Backslash içeren URL kesinlikle yasak
+#       * Scheme'siz domain (www.youtube.com, youtube.com) yasak
+#       * Köşeli parantezli markdown link formatı ([text](url)) yasak
+#   - Kullanıcı "X aç" derse planner hangi URL'yi üretmeli — kural ve örnekler eklendi
+#   - OPEN_URL örnekleri prompt içine eklendi (youtube aç, youtube.com aç, https://youtube.com aç)
 
 from config import DESKTOP_DIR, DOCUMENTS_DIR, DOWNLOADS_DIR
 
@@ -47,44 +50,111 @@ ACTION KURALLARI:
   DELETE_FILE     → dosya veya klasörü sil
   CREATE_DIR      → klasör oluştur
   LIST_DIR        → klasör içeriğini listele
+  OPEN_URL        → tarayıcıda doğrudan URL açar (tam URL gerekli: https://...)
+  WEB_SEARCH      → arama sorgusu ile tarayıcıda arama yapar (query gerekli, URL değil)
 
 YASAK ACTION'LAR (normal kullanıcı planlarında kesinlikle kullanılmayacak):
   INTERNAL_LOG_WRITE   → sistem iç log kaydı, kullanıcı görevi değil
   INTERNAL_STATE_WRITE → sistem iç durum yazma, kullanıcı görevi değil
   INTERNAL_STATE_READ  → sistem iç durum okuma, kullanıcı görevi değil
 
+OPEN_URL vs WEB_SEARCH SEÇIM KURALI:
+- Kullanıcı tam URL veriyorsa → OPEN_URL
+- Kullanıcı arama sorgusu veriyorsa (örn: "youtube'da lofi müzik ara", "google'da hava durumu") → WEB_SEARCH
+- "youtube.com'u aç" → OPEN_URL (tam URL üret)
+- "youtube'da lofi ara" → WEB_SEARCH (arama sorgusu)
+
 ACTION-TARGET UYUM KURALLARI:
 - READ_FILE, WRITE_FILE, APPEND_FILE → target dosya yolu olmalı
 - CREATE_DIR, LIST_DIR → target klasör yolu veya klasör etiketi olmalı
 - COPY_FILE, DELETE_FILE → target dosya veya klasör yolu olmalı
 - MOVE_FILE → target hedef konum yolu olmalı
-- reason alanı her adımda zorunludur. Boş bırakılamaz, atlanamaz.
-  NOT: MOVE_FILE tek target ile kaynak bilgisini taşıyamaz; reason alanına kaynak belirtilmeli (ileride source/destination ayrımı yapılacak)
+- OPEN_URL → target tam URL olmalı (https://www.example.com formatında — aşağıdaki kurallara bak)
+- WEB_SEARCH → target arama sorgusu olmalı (düz metin, URL değil)
+- reason alanı her adımda zorunludur.
+
+OPEN_URL KURALLARI:
+- target alanı MUTLAKA tam ve geçerli bir URL olmalıdır.
+- Scheme separator DAIMA :// olacak. Tek slash, backslash veya sadece : KESİNLİKLE YASAK:
+    YASAK → https:\www.youtube.com
+    YASAK → https:\[www.youtube.com]
+    YASAK → https:/youtube.com
+    DOĞRU → https://www.youtube.com
+- Scheme'siz (protokolsüz) domain kullanılamaz:
+    YASAK → www.youtube.com
+    YASAK → youtube.com
+    DOĞRU → https://www.youtube.com
+- Markdown link formatı ([metin](url)) target içinde KESİNLİKLE kullanılamaz:
+    YASAK → [www.youtube.com](https://www.youtube.com)
+    DOĞRU → https://www.youtube.com
+- file://, javascript:, ftp:// ve diğer scheme'ler KESİNLİKLE kullanılamaz.
+- permission_scope ZORUNLU olarak "Internet" olmalı.
+
+OPEN_URL — KULLANICI KOMUTU → TARGET ÜRETİM KURALI:
+- Kullanıcı bir sitenin adını veya "X aç" diyorsa → https://www.<domain>.com formatında tam URL üret.
+- Kullanıcı scheme'siz domain söylüyorsa (örn: "youtube.com aç") → https:// ekleyerek tam URL üret.
+- Kullanıcı scheme'li URL söylüyorsa (örn: "https://youtube.com aç") → olduğu gibi kullan.
+
+Örnekler:
+  Kullanıcı: youtube aç
+  Action: OPEN_URL
+  Target: https://www.youtube.com
+  Scope: Internet
+
+  Kullanıcı: google aç
+  Action: OPEN_URL
+  Target: https://www.google.com
+  Scope: Internet
+
+  Kullanıcı: youtube.com aç
+  Action: OPEN_URL
+  Target: https://youtube.com
+  Scope: Internet
+
+  Kullanıcı: https://youtube.com aç
+  Action: OPEN_URL
+  Target: https://youtube.com
+  Scope: Internet
+
+  Kullanıcı: github.com'u aç
+  Action: OPEN_URL
+  Target: https://github.com
+  Scope: Internet
+
+WEB_SEARCH KURALLARI:
+- target alanı düz metin arama sorgusu olmalı (URL değil)
+- target boş olamaz
+- target maksimum 300 karakter olmalı
+- permission_scope ZORUNLU olarak "Internet" olmalı
+- Gerçek web scraping yapılmaz; yalnızca tarayıcıda arama sayfası açılır
 
 TARGET KURALLARI:
 - target alanı hiçbir zaman açıklama cümlesi olmayacak.
 - target kısa, tek parça ve makine tarafından yorumlanabilir bir değer olmalı.
 - %USERPROFILE% gibi environment variable KULLANMA.
-- SADECE aşağıdaki gerçek sistem yollarını kullan:
+- Dosya action'ları için SADECE aşağıdaki gerçek sistem yollarını kullan:
   Masaüstü    → {DESKTOP_DIR}
   Belgeler    → {DOCUMENTS_DIR}
   İndirilenler → {DOWNLOADS_DIR}
 - Tam path bilinmiyorsa yalnızca kısa standart etiket kullanılacak: Desktop, Documents, Downloads
 - UserHome etiketi KULLANMA — her zaman daha spesifik Desktop/Documents/Downloads etiketini kullan.
-- Doğal dil ifadeleri target alanında kesinlikle kullanılmayacak.
-- Kullanıcı isteğiyle ilgisiz genel path'ler (C:\\, D:\\ gibi) kesinlikle kullanılmayacak.
+- Doğal dil ifadeleri target alanında kesinlikle kullanılmayacak (WEB_SEARCH hariç — query düz metin olabilir).
 - CREATE_DIR için target klasörün tam yolunu içermeli: örnek → {DESKTOP_DIR}\\TestKlasoru
-- Sadece zone kökü (Desktop, Documents gibi) CREATE_DIR için geçersizdir.
 
 PERMISSION SCOPE KURALLARI:
 - permission_scope işlem yapılan zone'a göre spesifik seçilmeli:
-    Desktop zone'u → "Desktop"
-    Documents zone'u → "Documents"
-    Downloads zone'u → "Downloads"
+    Desktop zone'u          → "Desktop"
+    Documents zone'u        → "Documents"
+    Downloads zone'u        → "Downloads"
+    Tarayıcı / URL işlemi   → "Internet"
+    Arama işlemi            → "Internet"
 - "UserHome" yalnızca gerçekten kullanıcı ana dizini kökü hedefleniyorsa kullanılır.
-- "User" yalnızca birden fazla zone kapsanıyorsa kullanılır.
-- "Internal" yalnızca INTERNAL_* action'larında kullanılır (normal planlarda yasak).
-- Serbest metin yazma — yalnızca bu etiketlerden birini seç: Desktop, Documents, Downloads, UserHome, User, Internal
+- "User" yalnızca birden fazla dosya zone'u kapsanıyorsa kullanılır.
+- "Internal" yalnızca INTERNAL_* action'larında kullanılır.
+- "Internet" YALNIZCA OPEN_URL ve WEB_SEARCH action'larında kullanılır.
+- Dosya action'larında "Internet" scope KULLANMA.
+- OPEN_URL ve WEB_SEARCH action'larında "Internet" dışında scope KULLANMA.
+- Serbest metin yazma — yalnızca bu etiketlerden birini seç: Desktop, Documents, Downloads, UserHome, User, Internal, Internet
 
 Beklenen JSON şeması:
 {{
@@ -93,14 +163,14 @@ Beklenen JSON şeması:
   "steps": [
     {{
       "step_no": 1,
-      "action": "CREATE_DIR",
-      "target": "string",
+      "action": "WEB_SEARCH",
+      "target": "lofi müzik",
       "reason": "string"
     }}
   ],
   "risk_level": "low",
   "risk_notes": [],
-  "permission_scope": "Desktop",
+  "permission_scope": "Internet",
   "single_task_ok": true,
   "forbidden_request_detected": false,
   "requires_real_execution": false,
@@ -111,10 +181,6 @@ Beklenen JSON şeması:
 
 
 def build_prompt(user_input) -> str:
-    """
-    str  → eski davranış: kullanıcı metnini <<<...>>> içine gömer.
-    dict → structured prompt: original <<<...>>> içinde, clarifications ayrı bölümde.
-    """
     if isinstance(user_input, str):
         return f"{SYSTEM_PROMPT}\n\nKullanıcı isteği:\n<<<\n{user_input}\n>>>\n"
 

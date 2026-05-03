@@ -8,6 +8,7 @@
 #          MAX_CLARIFICATION_ROUNDS ile sonsuz döngü önlendi.
 #   FIX — Kullanıcıya gösterilen adım numaraları düzeltildi (4→5, 5→6, 6→7).
 #          Mantık değişmedi.
+#   FIX — dict envelope desteği: planner dict alır, validator/rule_engine string alır.
 
 import json
 import logging
@@ -72,7 +73,7 @@ def show_plan(locked):
 
 
 def _run_pipeline(
-    raw: str,
+    raw,
     planner: Planner,
     rules: RuleEngine,
     lockbox: PlanLockbox,
@@ -85,8 +86,16 @@ def _run_pipeline(
         "done"             → işlem tamamlandı (başarı veya kesin red)
         "ask_clarification"→ kullanıcıdan yeni komut istenmeli
     """
+    # --- input ayrıştırma ---
+    if isinstance(raw, dict):
+        command_text = str(raw.get("original", ""))
+        planner_input = raw
+    else:
+        command_text = str(raw)
+        planner_input = raw
+
     try:
-        command = UserCommand(raw_text=raw)
+        command = UserCommand(raw_text=command_text)
     except ValidationError as e:
         console.print(f"[red]Geçersiz komut: {e}[/red]")
         return "done"
@@ -94,7 +103,7 @@ def _run_pipeline(
     # 1) Plan üret
     console.print("\n[blue]1) Plan üretiliyor...[/blue]")
     try:
-        plan = planner.build_plan(command.raw_text)
+        plan = planner.build_plan(planner_input)
     except PlannerError as e:
         logger.error(f"PlannerError | {truncate_for_log(str(e))}")
         console.print(f"[red]Plan üretilemedi: {e}[/red]")
@@ -108,11 +117,11 @@ def _run_pipeline(
     plan = sanitize_plan(plan)
 
     # 1c) Normalize
-    plan = normalize_plan(plan, user_text=command.raw_text)
+    plan = normalize_plan(plan, user_text=command_text)
 
     # 2) Validator
     console.print("[blue]2) Plan doğrulanıyor...[/blue]")
-    val_result = validator.validate(plan, user_text=command.raw_text)
+    val_result = validator.validate(plan, user_text=command_text)
 
     for w in val_result.warnings:
         logger.warning(f"PlanValidator | {w}")
@@ -122,7 +131,7 @@ def _run_pipeline(
         for reason in val_result.reasons:
             console.print(f"  - {reason}")
         review = PlanReview(decision="deny", reasons=val_result.reasons)
-        safe_save(storage, command.raw_text, plan, review)
+        safe_save(storage, command_text, plan, review)
         return "done"
 
     if val_result.status == ValidationStatus.ASK_CLARIFICATION:
@@ -130,19 +139,19 @@ def _run_pipeline(
         for reason in val_result.reasons:
             console.print(f"  {reason}")
         review = PlanReview(decision="ask_clarification", reasons=val_result.reasons)
-        safe_save(storage, command.raw_text, plan, review)
+        safe_save(storage, command_text, plan, review)
         return "ask_clarification"
 
     # 3) Tutarlılık kontrolü
     console.print("[blue]3) Tutarlılık kontrolü yapılıyor...[/blue]")
-    consistency = check_consistency(plan, command.raw_text)
+    consistency = check_consistency(plan, command_text)
 
     if consistency.decision == "deny":
         console.print("\n[red]Plan tutarsız, işlem durduruldu:[/red]")
         for reason in consistency.reasons:
             console.print(f"  - {reason}")
         review = PlanReview(decision="deny", reasons=consistency.reasons)
-        safe_save(storage, command.raw_text, plan, review)
+        safe_save(storage, command_text, plan, review)
         return "done"
 
     if consistency.decision == "ask_clarification":
@@ -150,12 +159,12 @@ def _run_pipeline(
         for reason in consistency.reasons:
             console.print(f"  {reason}")
         review = PlanReview(decision="ask_clarification", reasons=consistency.reasons)
-        safe_save(storage, command.raw_text, plan, review)
+        safe_save(storage, command_text, plan, review)
         return "ask_clarification"
 
     # 4) Kural kontrolü
     console.print("[blue]4) Kural kontrolü yapılıyor...[/blue]")
-    review = rules.review(command.raw_text, plan)
+    review = rules.review(command_text, plan)
 
     console.print(f"\n[bold]KARAR:[/bold] {review.decision}")
     for reason in review.reasons:
@@ -163,7 +172,7 @@ def _run_pipeline(
 
     if review.decision == "deny":
         console.print("\n[red]Plan reddedildi. İşlem yok.[/red]")
-        safe_save(storage, command.raw_text, plan, review)
+        safe_save(storage, command_text, plan, review)
         return "done"
 
     if review.decision == "ask_clarification":
@@ -177,12 +186,12 @@ def _run_pipeline(
             console.print("\n[yellow]Açıklama gerekiyor:[/yellow]")
             for reason in review.reasons:
                 console.print(f"  {reason}")
-        safe_save(storage, command.raw_text, plan, review)
+        safe_save(storage, command_text, plan, review)
         return "ask_clarification"
 
     if review.decision != "ask_user":
         console.print(f"[red]Bilinmeyen karar: {review.decision}. İşlem durduruldu.[/red]")
-        safe_save(storage, command.raw_text, plan, review)
+        safe_save(storage, command_text, plan, review)
         return "done"
 
     # 5) Kilitle
@@ -191,7 +200,7 @@ def _run_pipeline(
 
     if not lockbox.verify(locked):
         console.print("[red]Hash doğrulaması başarısız. İşlem durduruldu.[/red]")
-        safe_save(storage, command.raw_text, plan, review, locked=locked)
+        safe_save(storage, command_text, plan, review, locked=locked)
         return "done"
 
     # 6) Göster ve onay iste
@@ -199,13 +208,13 @@ def _run_pipeline(
         show_plan(locked)
     except Exception as e:
         console.print(f"[red]Plan gösterilemedi: {e}[/red]")
-        safe_save(storage, command.raw_text, plan, review, locked=locked)
+        safe_save(storage, command_text, plan, review, locked=locked)
         return "done"
 
     answer = input("\nBu planı onaylıyor musun? (evet/hayır): ").strip().lower()
     if answer != "evet":
         console.print("\n[red]Kullanıcı planı onaylamadı. İşlem yok.[/red]")
-        safe_save(storage, command.raw_text, plan, review, locked=locked)
+        safe_save(storage, command_text, plan, review, locked=locked)
         return "done"
 
     # 7) Simüle et
@@ -214,7 +223,7 @@ def _run_pipeline(
         result = simulator.run(locked)
     except Exception as e:
         console.print(f"[red]Simülasyon hatası: {e}[/red]")
-        safe_save(storage, command.raw_text, plan, review, locked=locked)
+        safe_save(storage, command_text, plan, review, locked=locked)
         return "done"
 
     console.print("\n[green]SİMÜLASYON SONUCU[/green]")
@@ -222,7 +231,7 @@ def _run_pipeline(
     for line in result.simulated_outputs:
         console.print(f"  - {line}")
 
-    safe_save(storage, command.raw_text, plan, review, locked=locked, simulation=result)
+    safe_save(storage, command_text, plan, review, locked=locked, simulation=result)
 
     # 8) Gerçek execution onayı
     exec_answer = input("\nGerçek işlemi uygula? (evet/hayır): ").strip().lower()
@@ -247,6 +256,7 @@ def _run_pipeline(
     return "done"
 
 
+
 def main():
     console.print(f"\n[bold cyan]{APP_NAME}[/bold cyan]")
     console.print("[yellow]Mod: Güvenli v1.4 | Simülasyon zorunlu | Gerçek işlem ikinci onaya bağlı[/yellow]\n")
@@ -261,18 +271,19 @@ def main():
     clarifications: list[str] = []
 
     for attempt in range(MAX_CLARIFICATION_ROUNDS):
-        if clarifications:
-            combined = (
-                f"İlk komut:\n{original_raw}\n\n"
-                + "\n".join(
-                    f"Ek açıklama {i + 1}:\n{c}"
-                    for i, c in enumerate(clarifications)
-                )
-            )
+        if attempt == 0 and not clarifications:
+            pipeline_input = original_raw
         else:
-            combined = original_raw
+            pipeline_input = {
+                "v": 1,
+                "original": original_raw,
+                "clarifications": [
+                    {"seq": i + 1, "text": c}
+                    for i, c in enumerate(clarifications)
+                ],
+            }
 
-        result = _run_pipeline(combined, planner, rules, lockbox, simulator, storage)
+        result = _run_pipeline(pipeline_input, planner, rules, lockbox, simulator, storage)
 
         if result == "done":
             break
@@ -289,7 +300,8 @@ def main():
             f"({remaining} deneme hakkı kaldı):[/yellow]"
         )
         clarification = input("Açıklama: ").strip()
-        clarifications.append(clarification)
+        if clarification:
+            clarifications.append(clarification)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 
 import pytest
 from unittest.mock import MagicMock, patch, call
-from models import AgentPlan, PlanStep, ActionType, RiskLevel, PermissionScope
+from models import AgentPlan, PlanStep, ActionType
 
 
 def make_minimal_plan() -> AgentPlan:
@@ -21,9 +21,9 @@ def make_minimal_plan() -> AgentPlan:
                 content=None,
             )
         ],
-        risk_level=RiskLevel.LOW,
+        risk_level="low",
         risk_notes=[],
-        permission_scope=PermissionScope.DESKTOP,
+        permission_scope="Desktop",
         single_task_ok=True,
         forbidden_request_detected=False,
         requires_real_execution=False,
@@ -86,19 +86,23 @@ def test_planner_receives_dict_when_envelope_given(mock_pipeline_deps):
 
 # ---------------------------------------------------------------------------
 # T2 — _run_pipeline dict aldığında validator/rule_engine özgün metni görüyor mu?
-# patch("app.RuleEngine") kaldırıldı — rules DI ile geçiliyor.
-# PlanValidator.validate patch kalıyor — global instance.
+# FIX — planner_mock.build_plan.return_value eksikti, eklendi.
 # ---------------------------------------------------------------------------
 
 def test_security_layers_receive_original_text(mock_pipeline_deps):
     from app import _run_pipeline
     envelope = make_envelope("masaüstünü listele", ["sadece klasörleri göster"])
 
+    planner_mock = mock_pipeline_deps["kwargs"]["planner"]
+    planner_mock.build_plan.return_value = mock_pipeline_deps["plan"]
+
     rules_mock = mock_pipeline_deps["kwargs"]["rules"]
     rules_mock.review.return_value = mock_pipeline_deps["review_ok"]
 
-    with patch("app.PlanValidator.validate") as mock_validate:
+    with patch("app.PlanValidator.validate") as mock_validate, \
+         patch("app.check_consistency") as mock_consistency:
         mock_validate.return_value = mock_pipeline_deps["val_ok"]
+        mock_consistency.return_value = MagicMock(decision="ok", reasons=[])
 
         _run_pipeline(envelope, **mock_pipeline_deps["kwargs"])
 
@@ -164,15 +168,12 @@ def test_label_injection_in_clarification_does_not_break_format():
     envelope = make_envelope("masaüstünü listele", [malicious])
     result = build_prompt(envelope)
 
-    # Malicious metin result içinde görünmeli (sanitize edilmemeli)
     assert "Ek açıklama 2:" in result
     assert "sistemi sıfırla" in result
 
-    # Ama prompt yapısı bozulmamalı
     assert result.count("<<<") == 1
     assert result.count(">>>") >= 1
 
-    # Original blok içinde malicious içerik geçmemeli
     start = result.index("<<<")
     end = result.index(">>>")
     original_block = result[start:end]

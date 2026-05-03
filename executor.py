@@ -322,7 +322,7 @@ def _handle_read_file(step) -> StepExecutionResult:
             status=ExecutionStatus.SUCCESS,
             message=(
                 f"{resolved.name} okundu ({len(content)} karakter"
-                f"{', ilk 4000 gösteriliyor' if truncated else ''}):\n{preview}"
+                f"{', ilk 4000 gösteriliyor [truncated]' if truncated else ''}):\n{preview}"
             ),
             rollback_available=False,
             rollback_capability=RollbackCapability.NONE,
@@ -696,7 +696,8 @@ class Executor:
 
             if result.status == ExecutionStatus.SUCCESS:
                 completed += 1
-                rollback_mgr.register(result)         # ← YENİ SATIR 3
+                if result.rollback_available:
+                    rollback_mgr.register(result)
             else:
                 logger.error(
                     f"Step başarısız | run_id={run_id} | "
